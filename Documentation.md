@@ -29,11 +29,11 @@ s3://<bucket>/bronze/dataset=multilingual-customer-support-tickets/version=14/sh
 - Autenticação por perfil AWS CLI/SSO ou credenciais temporárias. Não usar root nem guardar chaves no repositório.
 - O script `scripts/provision_aws.sh` cria orçamento primeiro; depois bucket com bloqueio de acesso público, propriedade `BucketOwnerEnforced`, SSE-S3, versionamento e política que exige TLS.
 - Para a conta pessoal, [docs/aws_access.md](docs/aws_access.md) contém um roteiro sequencial para quem começa no IAM: conta root, preparo dos JSON, cliques no console, MFA, perfil local, provisionamento e ingestão. A política runtime cobre S3/Athena/Glue; a política temporária de bootstrap cobre Budgets e configuração do bucket. `scripts/create_ingest_policy.sh` permanece opcional para uma identidade separada de ingestão apenas em `bronze/`.
-- O orçamento emite alertas, mas não interrompe cobranças automaticamente. Consulte custo real na conta após o uso; nenhum valor de consumo AWS foi observado nesta sessão.
+- O orçamento emite alertas, mas não interrompe cobranças automaticamente. O orçamento existente foi verificado em US$ 5/mês, com alertas em 80% e 100% para o e-mail fornecido pelo usuário. A AWS informou gasto calculado de US$ 0,00 no momento da consulta; esse valor pode mudar após a contabilização.
 
 ## Operação e validação
 
-Ver [README.md](README.md) para comandos completos. A autenticação AWS está pendente; sem ela, não há evidência de recursos cloud criados. A confirmação da Bronze depende de `head-object` no CSV e no manifesto, `get-object` do manifesto e comparação do hash do CSV baixado com o hash local.
+Ver [README.md](README.md) para comandos completos. O perfil `medallion-poc` foi autenticado como `user/medallion-poc-operator`. O bucket da POC foi criado em `us-east-1`; o AWS CLI confirmou bloqueio público total, SSE-S3, versionamento, tags e política que nega transporte sem TLS. O comando que define `BucketOwnerEnforced` terminou com êxito; uma consulta adicional de leitura recebeu `AccessDenied` porque a política IAM não concede `s3:GetBucketOwnershipControls`. A confirmação da Bronze ainda depende do upload e de `head-object` no CSV e no manifesto, `get-object` do manifesto e comparação do hash do CSV baixado com o hash local.
 
 ## Limitações
 

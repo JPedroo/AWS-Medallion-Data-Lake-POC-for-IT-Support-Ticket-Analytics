@@ -172,3 +172,47 @@ Usuário seguirá os passos 1 a 7 para criar e autenticar `medallion-poc-operato
 ### Próxima atividade planejada
 
 Prosseguir no passo 3 do guia para criar `MedallionPocRuntime` no console IAM, depois a política temporária e o usuário.
+
+## Sessão 5 — 2026-11-08 — Execução do passo 8 na AWS
+
+### Atividades realizadas
+
+- Confirmado pelo AWS CLI que `medallion-poc` autentica como `user/medallion-poc-operator`, sem usar root.
+- Executado `scripts/provision_aws.sh` com região `us-east-1`, limite mensal de US$ 5 e e-mail de alertas informado pelo usuário.
+- Verificado que o orçamento já existia com limite correto; conferidos pelo CLI os alertas de 80% e 100% e seus destinatários.
+- Criado e configurado o bucket da POC; conferidos bloqueio público, SSE-S3, versionamento, política TLS e tags.
+
+### Arquivos criados ou alterados
+
+`README.md`, `Plan.md`, `Documentation.md` e `docs/diario_do_projeto.md`. Nenhuma credencial, e-mail pessoal ou ID real da conta foi incluído nos arquivos versionados.
+
+### Comandos e testes executados
+
+- `.tools/bin/aws --version` → AWS CLI 2.39.6.
+- `.tools/bin/aws sts get-caller-identity --profile medallion-poc` → usuário IAM esperado.
+- `AWS_PROFILE=medallion-poc AWS_REGION=us-east-1 POC_BUCKET=<bucket-da-conta> POC_BUDGET_EMAIL=<email-informado> POC_BUDGET_USD=5 AWS_BIN="$PWD/.tools/bin/aws" bash scripts/provision_aws.sh` → concluído.
+- `aws budgets describe-budget`, `describe-notifications-for-budget` e `describe-subscribers-for-notification` → limite e alertas confirmados.
+- `aws s3api get-bucket-policy`, `get-bucket-tagging` e verificações do próprio script → configurações confirmadas.
+- `aws budgets describe-budget --query 'Budget.CalculatedSpend.ActualSpend'` → USD 0,00 calculado na consulta.
+
+### Problemas encontrados e soluções
+
+- A consulta STS inicial não alcançou o endpoint pelo ambiente isolado; a execução com acesso de rede funcionou.
+- O orçamento já existia. O script não o alterou; limite, limiares e destinatário foram conferidos com comandos de leitura.
+- A consulta adicional `s3api get-bucket-ownership-controls` recebeu `AccessDenied` porque falta `s3:GetBucketOwnershipControls` na política da identidade. `put-bucket-ownership-controls` concluiu sem erro no script; o estado não foi confirmado por leitura independente.
+
+### Decisões técnicas
+
+- Manter a região `us-east-1` e o bucket privado único da arquitetura. Não ampliar a política IAM apenas para a consulta opcional de propriedade.
+- Parar no passo 8 solicitado pelo usuário; a ingestão Bronze fica para o passo 9.
+
+### Resultados, custos e evidências
+
+- Orçamento mensal existente: US$ 5, alertas ACTUAL em 80% e 100% para o e-mail fornecido.
+- Bucket criado na região escolhida, com bloqueio público total, SSE-S3, versionamento habilitado, tags e negação de tráfego sem TLS.
+- Gasto calculado no orçamento: **US$ 0,00 no momento da consulta**. A AWS pode atualizar esse valor após atraso de faturamento; não equivale a uma fatura fechada.
+- Evidências: saídas dos comandos AWS CLI desta sessão. CSV e manifesto ainda não estão na Bronze.
+
+### Próxima atividade planejada
+
+Executar o passo 9: enviar CSV original e manifesto com boto3, verificar `head-object`, baixar e conferir SHA-256; após a validação, remover `MedallionPocBootstrap` no console IAM.

@@ -2,7 +2,7 @@
 
 Sprint 1 da POC acadêmica de três semanas descrita no briefing fornecido pelo usuário. O fluxo preserva um CSV versionado do Kaggle na camada Bronze de um bucket privado, acompanhado por manifesto auditável. Silver/Gold, Athena e Grafana estão planejados para as Sprints 2 e 3.
 
-**Estado em 2026-11-08:** dataset e ambiente local validados; código Bronze pronto. A conta AWS ainda não tem perfil CLI configurado nesta máquina, então orçamento, bucket, IAM e upload permanecem pendentes. Não há custo AWS observado nesta sessão.
+**Estado em 2026-11-08:** dataset e ambiente local validados; código Bronze pronto. O perfil CLI `medallion-poc` foi autenticado como usuário IAM; orçamento mensal de US$ 5 com alertas em 80% e 100% foi verificado; bucket privado em `us-east-1` foi configurado pelo AWS CLI. O CSV e manifesto ainda não foram enviados. O orçamento informou gasto calculado de US$ 0,00 no momento da consulta, sujeito ao atraso de contabilização da AWS.
 
 ## Fonte e atribuição
 
@@ -65,7 +65,7 @@ export POC_BUDGET_USD=5
 bash scripts/provision_aws.sh
 ```
 
-Troque `SEU_EMAIL_DE_ALERTA` pelo endereço real. O script cria **primeiro** um orçamento mensal em USD com avisos em 80% e 100%, depois o bucket privado, criptografia SSE-S3, bloqueio público, versionamento e exigência de TLS. O orçamento avisa; ele não impede gastos. `us-east-1` é a região padrão desta POC e deve ser mantida em todas as etapas; outro valor também funciona se escolhido antes do provisionamento. Verifique o limite e o destinatário de um orçamento já existente, pois o script não os altera.
+Troque `SEU_EMAIL_DE_ALERTA` pelo endereço real. O script cria **primeiro** um orçamento mensal em USD com avisos em 80% e 100%, depois o bucket privado, criptografia SSE-S3, bloqueio público, versionamento e exigência de TLS. O orçamento avisa; ele não impede gastos. `us-east-1` é a região padrão desta POC e deve ser mantida em todas as etapas; outro valor também funciona se escolhido antes do provisionamento. Se o orçamento já existir, o script não altera limite nem destinatários; nesta execução, ambos foram conferidos separadamente pelo CLI.
 
 Se futuramente houver uma identidade **separada** somente para ingestão Bronze, o administrador pode associar a política mínima a um usuário IAM existente:
 
