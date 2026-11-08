@@ -19,7 +19,7 @@ Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_s
 - [ ] Política IAM mínima associada a identidade de ingestão existente, se aplicável.
 - [x] Ingestão boto3 e manifesto com SHA-256 implementados e validados em modo local.
 - [ ] CSV original e manifesto no S3; `head-object` e checksum conferidos.
-- [ ] Commit enviado ao GitHub remoto.
+- [x] Commit `f260189` enviado ao GitHub remoto na branch `main`.
 
 ## Decisões para a Sprint 2
 

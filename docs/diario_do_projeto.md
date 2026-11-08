@@ -29,6 +29,7 @@ Arquivos locais **ignorados**: `.venv/`, `.tools/`, `data/raw/`.
 - `bash -n scripts/provision_aws.sh scripts/create_ingest_policy.sh` → sintaxe válida.
 - `.venv/bin/python src/ingest_bronze.py --source data/raw/dataset-tickets-multi-lang3-4k.csv --dry-run` → manifesto com 4.000 linhas, 6.873.542 bytes, SHA-256 esperado.
 - `.venv/bin/python -m unittest discover -s tests -v` → 1 teste aprovado; valida bytes preservados, manifesto e reexecução sem overwrite.
+- `git diff --cached --check`, `git commit -m 'Implement Sprint 1 preparation and Bronze ingestion'` e `git push -u origin main` → commit `f260189` publicado na branch `main`.
 
 ### Problemas encontrados e soluções
 
@@ -50,6 +51,7 @@ Arquivos locais **ignorados**: `.venv/`, `.tools/`, `data/raw/`.
 - Ambientes locais verificados; ingestão verificada apenas em modo `--dry-run`.
 - **Recursos AWS criados: nenhum. Custo AWS observado: indisponível**, pois não houve autenticação nem chamadas à conta. Não confundir essa ausência de medição com custo zero da conta.
 - Evidências textuais em `docs/dataset.md`, saída do `--dry-run` e comandos de validação acima. Os arquivos brutos permanecem apenas localmente e ignorados pelo Git.
+- Código e documentação publicados em `https://github.com/JPedroo/AWS-Medallion-Data-Lake-POC-for-IT-Support-Ticket-Analytics` (branch `main`, commit `f260189`).
 
 ### Próxima atividade planejada
 
