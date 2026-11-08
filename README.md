@@ -2,7 +2,7 @@
 
 Sprint 1 da POC acadêmica de três semanas descrita no briefing fornecido pelo usuário. O fluxo preserva um CSV versionado do Kaggle na camada Bronze de um bucket privado, acompanhado por manifesto auditável. Silver/Gold, Athena e Grafana estão planejados para as Sprints 2 e 3.
 
-**Estado em 2026-11-08:** CSV original e manifesto publicados e validados na Bronze do bucket privado em `us-east-1`. O orçamento mensal de US$ 5 tem alertas em 80% e 100%. O gasto calculado exibido após a ingestão era US$ 0,00, sujeito ao atraso de contabilização da AWS. Resta confirmar a retirada da política IAM temporária `MedallionPocBootstrap` e o MFA do usuário no console administrador.
+**Sprint 1 concluída em 2026-11-08:** CSV original e manifesto publicados e validados na Bronze do bucket privado em `us-east-1`. O orçamento mensal de US$ 5 tem alertas em 80% e 100%. O usuário confirmou no console o MFA ativo e a retirada da política IAM temporária `MedallionPocBootstrap`; após isso, o perfil da POC continuou lendo a Bronze. O gasto calculado exibido após a ingestão era US$ 0,00, sujeito ao atraso de contabilização da AWS.
 
 ## Fonte e atribuição
 
@@ -42,7 +42,7 @@ O script fixa a versão 14 e verifica SHA-256 antes da ingestão. A opção Pand
 
 ## Intervenção manual para acesso AWS
 
-Para a **conta pessoal** informada pelo usuário, siga os **passos 1 a 9**, em ordem, em [docs/aws_access.md](docs/aws_access.md). O guia mostra os cliques no console, como copiar as políticas do Mac, criar o usuário IAM `medallion-poc-operator`, ativar MFA e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap deve ser removida depois da Sprint 1.
+Para a **conta pessoal** informada pelo usuário, siga os **passos 1 a 9**, em ordem, em [docs/aws_access.md](docs/aws_access.md). O guia mostra os cliques no console, como copiar as políticas do Mac, criar o usuário IAM `medallion-poc-operator`, ativar MFA e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap foi retirada após a validação da Sprint 1, conforme confirmação do usuário no console.
 
 Após criar o usuário no console, execute na raiz do projeto:
 
@@ -54,7 +54,7 @@ aws sts get-caller-identity --profile medallion-poc
 
 Confira que o ARN retornado termina em `user/medallion-poc-operator`, nunca em `:root`. Se a conta já tiver IAM Identity Center de uma AWS Organization, use o fluxo SSO do guia em vez de criar outro usuário IAM.
 
-Depois da autenticação, escolha um e-mail que receberá alertas e execute:
+O provisionamento inicial foi feito com os comandos abaixo. Eles ficam documentados para reprodução em outra conta; após a remoção de `MedallionPocBootstrap`, **não reexecute** `scripts/provision_aws.sh` com o perfil atual, pois ele já não possui acesso a Budgets nem às configurações administrativas do bucket:
 
 ```bash
 export AWS_PROFILE=medallion-poc
@@ -74,7 +74,7 @@ export POC_INGEST_USER='NOME_DO_USUARIO_IAM_EXISTENTE'
 bash scripts/create_ingest_policy.sh
 ```
 
-Esta etapa é opcional quando a ingestão roda com uma role temporária já limitada a `bronze/`. O script não cria usuário nem chave. O perfil usado em `src/ingest_bronze.py` deve ser o da identidade de ingestão com `s3:GetObject` e `s3:PutObject` em `bronze/`.
+Essa identidade separada não foi necessária na Sprint 1: `medallion-poc` já tem permissões de execução para a Bronze. O script opcional não cria usuário nem chave. O perfil usado em `src/ingest_bronze.py` precisa de `s3:GetObject` e `s3:PutObject` em `bronze/`.
 
 ## Publicar e conferir a Bronze
 

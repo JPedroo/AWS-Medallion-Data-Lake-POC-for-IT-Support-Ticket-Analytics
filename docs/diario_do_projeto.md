@@ -267,3 +267,40 @@ Executar o passo 9: enviar CSV original e manifesto com boto3, verificar `head-o
 ### Próxima atividade planejada
 
 Confirmar pelo console administrador que MFA está ativo no usuário `medallion-poc-operator` e remover somente `MedallionPocBootstrap`; então marcar a Sprint 1 como encerrada. Sprint 2 permanece apenas planejada.
+
+## Sessão 7 — 2026-11-08 — Fechamento da Sprint 1
+
+### Atividades realizadas
+
+- Recebida confirmação do usuário de que retirou `MedallionPocBootstrap` e verificou MFA ativo no console IAM.
+- Confirmado pelo AWS CLI que o perfil `medallion-poc` continua autenticado como `user/medallion-poc-operator` e consegue ler o CSV Bronze após a alteração.
+- Marcada a Sprint 1 como concluída no plano e atualizados os documentos de entrada.
+
+### Arquivos criados ou alterados
+
+`README.md`, `Plan.md`, `Documentation.md`, `docs/aws_access.md` e `docs/diario_do_projeto.md`.
+
+### Comandos e testes executados
+
+- `aws sts get-caller-identity --profile medallion-poc` → usuário IAM esperado.
+- `aws s3api head-object --profile medallion-poc --checksum-mode ENABLED` → CSV com 6.873.542 bytes, checksum SHA-256 esperado e mesmo ID de versão.
+- `git status --short --branch` → repositório limpo no início da sessão.
+
+### Problemas encontrados e soluções
+
+- O perfil da POC não tem permissão IAM para inspecionar o MFA nem para remover políticas. O usuário executou e confirmou essas ações pelo console com a identidade administradora; a leitura S3 posterior mostrou que a política runtime continua operacional.
+
+### Decisões técnicas
+
+- Registrar a confirmação manual do usuário como evidência do estado IAM; não apresentar a leitura S3 como prova direta de MFA ou da lista de políticas anexadas.
+- Encerrar a Sprint 1 sem iniciar a Sprint 2 nesta sessão.
+
+### Resultados, custos e evidências
+
+- Critérios da Sprint 1 atendidos: dataset e ambiente documentados, orçamento e bucket privados, CSV original e manifesto validados na Bronze, MFA e remoção de bootstrap confirmados.
+- Último gasto calculado consultado no orçamento após o upload: **US$ 0,00**, sujeito a atraso de contabilização. Esta sessão não fez nova consulta de custo, pois a política temporária de Budgets foi removida.
+- Evidências: confirmação do usuário no console, saída STS/S3 CLI desta sessão e validação de dados registrada na sessão 6.
+
+### Próxima atividade planejada
+
+Iniciar a Sprint 2 somente quando solicitada: regras de qualidade, Silver e Gold em Parquet/Snappy e catálogo/consultas Athena.

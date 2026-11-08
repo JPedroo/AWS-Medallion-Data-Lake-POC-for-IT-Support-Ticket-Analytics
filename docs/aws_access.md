@@ -102,6 +102,8 @@ O perfil fica em `~/.aws/config`; a sessão temporária é armazenada em `~/.aws
 
 ### Passo 8 — Criar orçamento e bucket pela AWS CLI
 
+**Nesta conta, este passo já foi concluído.** Após a Sprint 1, `MedallionPocBootstrap` foi retirada conforme confirmação do usuário; o perfil `medallion-poc` já não deve executar novamente o script de provisionamento. Os comandos abaixo ficam como registro para a configuração inicial em outra conta.
+
 No mesmo Terminal, substitua `SEU_EMAIL_REAL` pelo e-mail em que deseja receber alertas, e execute:
 
 ```bash
