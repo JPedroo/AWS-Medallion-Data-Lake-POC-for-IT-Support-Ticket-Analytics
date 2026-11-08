@@ -78,6 +78,7 @@ Configurar perfil AWS não root (SSO ou role existente), confirmar conta e e-mai
 - `.venv/bin/python -c ... json.loads(...)` → os dois modelos de política são JSON válido; `git diff --check` → sem erro de formatação.
 - `.venv/bin/python -m pip install 'boto3[crt]==1.43.126'` → AWS CRT 0.38.0 instalado, exigido pelo boto3 para `aws login`.
 - `.tools/bin/aws login help` → subcomando disponível; `.venv/bin/python -m unittest discover -s tests -q` → 1 teste aprovado.
+- `git diff --cached --check`, `git commit -m 'Document personal AWS account access for POC'` e `git push origin main` → guia publicado no GitHub no commit `17acfdb`.
 
 ### Problemas encontrados e soluções
 
