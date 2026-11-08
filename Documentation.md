@@ -33,7 +33,9 @@ s3://<bucket>/bronze/dataset=multilingual-customer-support-tickets/version=14/sh
 
 ## Operação e validação
 
-Ver [README.md](README.md) para comandos completos. O perfil `medallion-poc` foi autenticado como `user/medallion-poc-operator`. O bucket da POC foi criado em `us-east-1`; o AWS CLI confirmou bloqueio público total, SSE-S3, versionamento, tags e política que nega transporte sem TLS. O comando que define `BucketOwnerEnforced` terminou com êxito; uma consulta adicional de leitura recebeu `AccessDenied` porque a política IAM não concede `s3:GetBucketOwnershipControls`. A confirmação da Bronze ainda depende do upload e de `head-object` no CSV e no manifesto, `get-object` do manifesto e comparação do hash do CSV baixado com o hash local.
+Ver [README.md](README.md) para comandos completos. O perfil `medallion-poc` foi autenticado como `user/medallion-poc-operator`. O bucket da POC foi criado em `us-east-1`; o AWS CLI confirmou bloqueio público total, SSE-S3, versionamento, tags e política que nega transporte sem TLS. O comando que define `BucketOwnerEnforced` terminou com êxito; uma consulta adicional de leitura recebeu `AccessDenied` porque a política IAM não concede `s3:GetBucketOwnershipControls`.
+
+O CSV original e o manifesto foram enviados à Bronze. `head-object` confirmou CSV com 6.873.542 bytes, metadado SHA-256 e checksum SHA-256 em base64; os dois objetos usam SSE-S3. Uma cópia baixada do CSV foi idêntica em bytes ao original, e o manifesto declarou 4.000 linhas, 17 campos, versão 14 e licença CC BY 4.0. A reexecução retornou os mesmos IDs de versão dos dois objetos. O orçamento informou US$ 0,00 de gasto calculado no momento da consulta, sujeito a atraso de contabilização. O fechamento administrativo ainda requer remover `MedallionPocBootstrap` e confirmar o MFA no console; o usuário da POC não possui permissão IAM para fazer essa remoção pelo CLI.
 
 ## Limitações
 

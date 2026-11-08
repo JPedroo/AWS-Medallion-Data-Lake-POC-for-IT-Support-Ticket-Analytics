@@ -216,3 +216,54 @@ Prosseguir no passo 3 do guia para criar `MedallionPocRuntime` no console IAM, d
 ### Próxima atividade planejada
 
 Executar o passo 9: enviar CSV original e manifesto com boto3, verificar `head-object`, baixar e conferir SHA-256; após a validação, remover `MedallionPocBootstrap` no console IAM.
+
+## Sessão 6 — 2026-11-08 — Bronze publicada e validada
+
+### Atividades realizadas
+
+- Revalidado o CSV versionado do Kaggle e executada a ingestão boto3 na Bronze do bucket privado.
+- Conferidos CSV e manifesto com AWS CLI, download e comparação byte a byte com a fonte local.
+- Reexecutada a ingestão e comparados os IDs de versão S3 para validar que não houve sobrescrita.
+- Tentada a retirada da política temporária pelo AWS CLI; a identidade da POC não tem permissão IAM para fazê-la.
+- Ajustado o fechamento do corpo de resposta S3 no código de ingestão.
+
+### Arquivos criados ou alterados
+
+`src/ingest_bronze.py`, `README.md`, `Plan.md`, `Documentation.md`, `docs/diario_do_projeto.md`. Os downloads de verificação em `data/staging/` permanecem ignorados pelo Git.
+
+### Comandos e testes executados
+
+- `.venv/bin/python src/fetch_dataset.py` → CSV local de 6.873.542 bytes, hash fixado.
+- `.venv/bin/python -m unittest discover -s tests -q` → 1 teste aprovado.
+- `.venv/bin/python src/ingest_bronze.py --source data/raw/dataset-tickets-multi-lang3-4k.csv --dry-run` → 4.000 linhas e 17 campos.
+- `aws sts get-caller-identity` e `aws s3api head-bucket` → usuário IAM esperado e bucket em `us-east-1`.
+- `.venv/bin/python src/ingest_bronze.py --source ... --bucket ... --region us-east-1 --profile medallion-poc` → CSV e manifesto publicados; segunda execução reutilizou os objetos.
+- `aws s3api head-object`, `get-object` e `list-objects-v2` → dois objetos Bronze encontrados; CSV com SHA-256 e checksum esperados, ambos com SSE-S3.
+- Comparação Python local → CSV baixado idêntico em bytes ao original; manifesto com origem, licença, versão, tamanho, esquema, hash e contagem corretos.
+- `aws budgets describe-budget` → US$ 0,00 de gasto calculado no momento da consulta.
+- `aws iam list-attached-user-policies` e `detach-user-policy` → `AccessDenied` nas duas ações.
+- Após o ajuste do `StreamingBody`, `.venv/bin/python -m unittest discover -s tests -q` → 1 teste aprovado; `git diff --check` → sem erro de formatação.
+- `rg` nos arquivos versionados alterados → nenhum ID real da conta nem e-mail pessoal incluído.
+
+### Problemas encontrados e soluções
+
+- O ambiente isolado exigiu acesso de rede para chamadas AWS; o CLI e o boto3 funcionaram com a permissão de execução adequada.
+- O usuário da POC não possui `iam:ListAttachedUserPolicies` nem `iam:DetachUserPolicy`. A política temporária permanece anexada até a remoção por uma identidade administradora no console IAM; os passos manuais foram enviados ao usuário.
+
+### Decisões técnicas
+
+- Preservar o CSV original na Bronze e limitar a conferência remota a leituras pelo AWS CLI; nenhuma transformação foi aplicada.
+- Manter as políticas IAM de execução restritas. Não conceder ao operador permissões administrativas apenas para retirar a política temporária.
+- Fechar explicitamente o `StreamingBody` do manifesto no código Python após a leitura.
+
+### Resultados, custos e evidências
+
+- Bronze contém CSV original (6.873.542 bytes) e manifesto (1.271 bytes) sob `version=14/sha256=9aae7120cf459fc27561febe29c7757c6d222bfebff50e8baa868991e57b87d1/`.
+- CSV possui 4.000 linhas, 17 campos e SHA-256 `9aae7120cf459fc27561febe29c7757c6d222bfebff50e8baa868991e57b87d1`; checksum S3 em base64 `mq5xIM9Fn8J1Yf6+Kcd1fG0iK/6/9Q6LqoaJkeV7h9E=`.
+- Os IDs de versão dos dois objetos permaneceram iguais após nova execução; a ingestão foi idempotente nesta verificação.
+- Orçamento mostrou **US$ 0,00 calculado** após o upload. O valor ainda pode mudar com o atraso de faturamento da AWS.
+- Evidências: saídas AWS CLI, cópias locais ignoradas pelo Git e validação de bytes/hash desta sessão.
+
+### Próxima atividade planejada
+
+Confirmar pelo console administrador que MFA está ativo no usuário `medallion-poc-operator` e remover somente `MedallionPocBootstrap`; então marcar a Sprint 1 como encerrada. Sprint 2 permanece apenas planejada.

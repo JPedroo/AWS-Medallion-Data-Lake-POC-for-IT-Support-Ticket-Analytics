@@ -129,7 +129,8 @@ def main() -> None:
     if existing_manifest is None:
         body = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         put_once(client, args.bucket, manifest_key, Body=body, ContentType="application/json", ServerSideEncryption="AES256")
-    saved_manifest = json.loads(client.get_object(Bucket=args.bucket, Key=manifest_key)["Body"].read())
+    with client.get_object(Bucket=args.bucket, Key=manifest_key)["Body"] as body:
+        saved_manifest = json.loads(body.read())
     if saved_manifest.get("source_sha256") != digest or saved_manifest.get("csv_key") != csv_key:
         raise RuntimeError("Manifesto Bronze existente diverge do CSV local")
     print(json.dumps({"csv": f"s3://{args.bucket}/{csv_key}", "manifest": f"s3://{args.bucket}/{manifest_key}", "sha256": digest, "rows": rows}, ensure_ascii=False))

@@ -2,7 +2,7 @@
 
 Sprint 1 da POC acadêmica de três semanas descrita no briefing fornecido pelo usuário. O fluxo preserva um CSV versionado do Kaggle na camada Bronze de um bucket privado, acompanhado por manifesto auditável. Silver/Gold, Athena e Grafana estão planejados para as Sprints 2 e 3.
 
-**Estado em 2026-11-08:** dataset e ambiente local validados; código Bronze pronto. O perfil CLI `medallion-poc` foi autenticado como usuário IAM; orçamento mensal de US$ 5 com alertas em 80% e 100% foi verificado; bucket privado em `us-east-1` foi configurado pelo AWS CLI. O CSV e manifesto ainda não foram enviados. O orçamento informou gasto calculado de US$ 0,00 no momento da consulta, sujeito ao atraso de contabilização da AWS.
+**Estado em 2026-11-08:** CSV original e manifesto publicados e validados na Bronze do bucket privado em `us-east-1`. O orçamento mensal de US$ 5 tem alertas em 80% e 100%. O gasto calculado exibido após a ingestão era US$ 0,00, sujeito ao atraso de contabilização da AWS. Resta confirmar a retirada da política IAM temporária `MedallionPocBootstrap` e o MFA do usuário no console administrador.
 
 ## Fonte e atribuição
 
@@ -97,7 +97,7 @@ aws s3api get-object --profile "$AWS_PROFILE" --region "$AWS_REGION" \
 shasum -a 256 data/staging/bronze.csv
 ```
 
-No retorno do primeiro `head-object`, confira `ContentLength=6873542`, `Metadata.sha256` igual ao hash acima e `ChecksumSHA256` correspondente. O manifesto deve declarar `source_rows=4000`. O resultado do `shasum` deve coincidir com o hash acima.
+No retorno do primeiro `head-object`, confira `ContentLength=6873542`, `Metadata.sha256` igual ao hash acima e `ChecksumSHA256` correspondente. O manifesto deve declarar `source_rows=4000`. O resultado do `shasum` deve coincidir com o hash acima. Nesta execução, o CSV baixado foi comparado byte a byte com o original e a reexecução da ingestão preservou os IDs de versão dos dois objetos.
 
 ## Repositório e continuidade
 
