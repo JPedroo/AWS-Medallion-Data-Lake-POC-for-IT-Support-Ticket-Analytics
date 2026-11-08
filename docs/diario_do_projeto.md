@@ -137,3 +137,38 @@ Criar o usuário/políticas pelo console, executar `aws login --profile medallio
 ### Próxima atividade planejada
 
 Usuário seguirá os passos 1 a 7 para criar e autenticar `medallion-poc-operator`. Com o perfil funcional, executar provisionamento CLI, ingestão Bronze e validação S3; registrar evidências e remover `MedallionPocBootstrap`.
+
+## Sessão 4 — 2026-11-08 — Validação dos modelos IAM
+
+### Atividades realizadas
+
+- Esclarecido que `123456789012` é o valor de busca do `sed` e somente `SEU_ID_DE_12_DIGITOS` deve ser editado no comando.
+- Inspecionados os dois JSON gerados localmente, sem exibir o ID real da conta.
+- Substituída a instrução de executar `grep` isoladamente por uma checagem que imprime `OK` quando os exemplos já foram removidos.
+
+### Arquivos criados ou alterados
+
+`docs/aws_access.md` e `docs/diario_do_projeto.md`. `README.md`, `Plan.md` e `Documentation.md` foram revisados e permanecem coerentes com o fluxo.
+
+### Comandos e testes executados
+
+- Script Python local verificou que os arquivos `data/staging/iam_poc_runtime_policy.json` e `data/staging/iam_poc_bootstrap_policy.json` existem, não contêm `123456789012` nem `SEU_ID_DE_12_DIGITOS` e usam um único ID de 12 dígitos.
+- `git status --short --branch` confirmou branch `main` limpa antes desta alteração.
+- Bloco `if grep ...; then ...; else ...; fi` → `OK: os números de exemplo foram substituídos`.
+- `python3 -m json.tool` em ambos os arquivos gerados → JSON válido; `git diff --check` → sem problemas de formatação.
+
+### Problemas encontrados e soluções
+
+- `grep` retorna código 1 e nenhuma linha quando não encontra o texto, comportamento que foi interpretado como falha. O guia agora explica que esse era o resultado esperado e imprime uma confirmação explícita.
+
+### Decisões técnicas
+
+- Manter os modelos com um ID de exemplo versionado e gerar cópias locais em `data/staging/`, ignorado pelo Git. O valor `123456789012` deve continuar nos comandos de substituição, pois representa o texto a localizar.
+
+### Resultados, custos e evidências
+
+- Os dois arquivos locais já passaram pela substituição de ID. A inspeção não realizou chamadas AWS. Nenhum recurso cloud foi criado e nenhum custo AWS foi medido nesta sessão.
+
+### Próxima atividade planejada
+
+Prosseguir no passo 3 do guia para criar `MedallionPocRuntime` no console IAM, depois a política temporária e o usuário.

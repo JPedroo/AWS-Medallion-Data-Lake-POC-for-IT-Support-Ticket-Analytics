@@ -31,7 +31,7 @@ Não habilite AWS Organizations apenas para esta POC sem conferir o plano da con
 cd '/Users/fpereira.joaopedro/Documents/AWS-Medallion-Data-Lake-POC-for-IT-Support-Ticket-Analytics'
 ```
 
-2. Cole o bloco abaixo. **Antes de pressionar Enter**, substitua somente `SEU_ID_DE_12_DIGITOS` pelo número copiado no passo 1, mantendo as aspas. Execute uma linha por vez ou cole o bloco inteiro:
+2. Cole o bloco abaixo. **Antes de pressionar Enter**, substitua somente `SEU_ID_DE_12_DIGITOS` pelo número copiado no passo 1, mantendo as aspas. **Mantenha `123456789012` nos dois comandos `sed`: esse é o número de exemplo que eles devem encontrar nos modelos para trocá-lo pelo seu ID.** Execute uma linha por vez ou cole o bloco inteiro:
 
 ```bash
 export POC_ACCOUNT_ID='SEU_ID_DE_12_DIGITOS'
@@ -42,7 +42,17 @@ python3 -m json.tool data/staging/iam_poc_runtime_policy.json >/dev/null
 python3 -m json.tool data/staging/iam_poc_bootstrap_policy.json >/dev/null
 ```
 
-3. As duas últimas linhas verificam a sintaxe. Se não aparecer mensagem de erro, os arquivos foram gerados. Confira se o ID digitado tem **exatamente 12 algarismos**. No Terminal, execute `grep -nE '123456789012|SEU_ID_DE_12_DIGITOS' data/staging/iam_poc_*_policy.json`; o resultado esperado é **nenhuma linha**. Se aparecer algo, corrija o ID na primeira linha e execute o bloco de novo. Os arquivos em `data/staging/` ficam fora do Git.
+3. As duas últimas linhas verificam a sintaxe JSON. Confira se o ID digitado tem **exatamente 12 algarismos**. Para verificar que nenhum texto de exemplo ficou nos arquivos, execute:
+
+```bash
+if grep -nE '123456789012|SEU_ID_DE_12_DIGITOS' data/staging/iam_poc_*_policy.json; then
+  echo 'ERRO: ainda há texto de exemplo; corrija o ID e repita o passo 2.'
+else
+  echo 'OK: os números de exemplo foram substituídos.'
+fi
+```
+
+O `grep` sozinho não mostra nada e retorna código 1 quando não encontra o exemplo; **isso significa sucesso nesta checagem**, embora o Terminal possa destacar esse código como erro. O bloco acima imprime `OK` nesse caso. Os arquivos em `data/staging/` ficam fora do Git.
 
 ### Passo 3 — Criar a política de execução no console
 
