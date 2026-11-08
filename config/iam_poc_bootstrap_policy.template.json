@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BudgetForPoc",
+      "Effect": "Allow",
+      "Action": ["budgets:ViewBudget", "budgets:ModifyBudget"],
+      "Resource": "arn:aws:budgets::123456789012:budget/medallion-it-tickets-poc"
+    },
+    {
+      "Sid": "BudgetBillingDependencyTemporary",
+      "Effect": "Allow",
+      "Action": ["aws-portal:ViewBilling", "aws-portal:ModifyBilling"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CreateAndConfigurePocBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketOwnershipControls",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutBucketVersioning",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketTagging",
+        "s3:GetBucketTagging",
+        "s3:PutBucketPolicy",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1"
+    }
+  ]
+}

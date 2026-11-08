@@ -56,3 +56,46 @@ Arquivos locais **ignorados**: `.venv/`, `.tools/`, `data/raw/`.
 ### Próxima atividade planejada
 
 Configurar perfil AWS não root (SSO ou role existente), confirmar conta e e-mail de alerta, executar `scripts/provision_aws.sh`, associar política de ingestão se necessário, publicar Bronze e conferir CSV/manifesto com `head-object` e checksum. Depois registrar custo real e iniciar Sprint 2 conforme autorização.
+
+## Sessão 2 — 2026-11-08 — Identidade AWS para conta pessoal
+
+### Atividades realizadas
+
+- Reavaliado o acesso após o usuário informar que a conta é pessoal.
+- Validada a documentação atual da AWS sobre `aws login`, boto3, IAM Identity Center, Budgets e políticas para S3/Athena/Glue.
+- Definido o caminho de um usuário IAM `medallion-poc-operator` com MFA e credenciais temporárias via login do console. Uma role manual não é necessária nesta conta pessoal; se a conta já usar AWS Organizations, o permission set do Identity Center cria a role automaticamente.
+- Preparado passo a passo de console e modelos de política com permissões separadas para bootstrap e runtime.
+
+### Arquivos criados ou alterados
+
+`docs/aws_access.md`, `config/iam_poc_bootstrap_policy.template.json`, `config/iam_poc_runtime_policy.template.json`, `README.md`, `Documentation.md`, `Plan.md`, `docs/diario_do_projeto.md`.
+
+### Comandos e testes executados
+
+- `git status --short --branch` para confirmar o repositório limpo no início da sessão.
+- `rg` nos scripts AWS para alinhar as ações IAM com chamadas reais.
+- Consulta às referências oficiais AWS de IAM, AWS CLI, Boto3, Budgets, S3, Athena e Glue.
+- `.venv/bin/python -c ... json.loads(...)` → os dois modelos de política são JSON válido; `git diff --check` → sem erro de formatação.
+- `.venv/bin/python -m pip install 'boto3[crt]==1.43.126'` → AWS CRT 0.38.0 instalado, exigido pelo boto3 para `aws login`.
+- `.tools/bin/aws login help` → subcomando disponível; `.venv/bin/python -m unittest discover -s tests -q` → 1 teste aprovado.
+
+### Problemas encontrados e soluções
+
+- A recomendação genérica anterior de SSO depende de uma instância organizacional do IAM Identity Center. Habilitar AWS Organizations em uma conta pessoal Free Tier pode alterar o plano e encerrar créditos; o guia agora prioriza `aws login` com IAM user e apresenta SSO apenas se já estiver disponível.
+- A autenticação AWS ainda depende de intervenção manual no console; nenhum usuário ou recurso foi criado por esta sessão.
+- O requisito adicional `boto3[crt]` para usar `aws login` foi identificado na documentação oficial e fixado em `requirements.txt`.
+
+### Decisões técnicas
+
+- Não criar role IAM manual para uma POC local em conta pessoal; usar perfil `medallion-poc` com credenciais temporárias do AWS CLI.
+- Separar permissões de bootstrap das permissões de execução; retirar bootstrap após a Sprint 1.
+- Fixar o banco Athena/Glue planejado em `medallion_it_tickets_poc` e o workgroup em `primary` para escopo de IAM. Validar os detalhes de Grafana quando a Sprint 3 começar.
+
+### Resultados, custos e evidências
+
+- Guia e modelos de políticas criados; nenhum acesso AWS foi usado e nenhum custo foi medido.
+- Evidências: documentação oficial citada em `docs/aws_access.md` e modelos JSON versionados.
+
+### Próxima atividade planejada
+
+Criar o usuário/políticas pelo console, executar `aws login --profile medallion-poc`, confirmar ARN não root, provisionar orçamento/bucket pelo CLI, ingerir e validar Bronze; remover a política temporária de bootstrap após o checkpoint C3.

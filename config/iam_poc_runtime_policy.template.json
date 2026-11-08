@@ -1,0 +1,81 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListPocBucket",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1"
+    },
+    {
+      "Sid": "ReadWriteMedallionData",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/bronze/*",
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/silver/*",
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/gold/*",
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/athena-results/*"
+      ]
+    },
+    {
+      "Sid": "ReplaceDerivedDataAndCleanQueryResults",
+      "Effect": "Allow",
+      "Action": ["s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/silver/*",
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/gold/*",
+        "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1/athena-results/*"
+      ]
+    },
+    {
+      "Sid": "AthenaPrimaryWorkgroup",
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:StopQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:ListQueryExecutions",
+        "athena:GetWorkGroup"
+      ],
+      "Resource": "arn:aws:athena:us-east-1:123456789012:workgroup/primary"
+    },
+    {
+      "Sid": "AthenaCatalogMetadata",
+      "Effect": "Allow",
+      "Action": [
+        "athena:GetDataCatalog",
+        "athena:ListDatabases",
+        "athena:GetTableMetadata",
+        "athena:ListTableMetadata"
+      ],
+      "Resource": "arn:aws:athena:us-east-1:123456789012:datacatalog/AwsDataCatalog"
+    },
+    {
+      "Sid": "ListAthenaResources",
+      "Effect": "Allow",
+      "Action": ["athena:ListWorkGroups", "athena:ListDataCatalogs"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GluePocCatalog",
+      "Effect": "Allow",
+      "Action": [
+        "glue:CreateDatabase",
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateTable",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:UpdateTable",
+        "glue:GetPartitions"
+      ],
+      "Resource": [
+        "arn:aws:glue:us-east-1:123456789012:catalog",
+        "arn:aws:glue:us-east-1:123456789012:database/medallion_it_tickets_poc",
+        "arn:aws:glue:us-east-1:123456789012:table/medallion_it_tickets_poc/*"
+      ]
+    }
+  ]
+}

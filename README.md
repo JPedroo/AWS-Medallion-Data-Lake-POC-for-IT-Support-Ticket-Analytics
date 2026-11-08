@@ -42,16 +42,17 @@ O script fixa a versão 14 e verifica SHA-256 antes da ingestão. A opção Pand
 
 ## Intervenção manual para acesso AWS
 
-O operador precisa obter acesso à conta AWS. Se a organização usa IAM Identity Center, peça ao administrador a **URL inicial SSO**, a **região do Identity Center** e o nome da conta/role com permissões de provisionamento. Execute no terminal:
+Para a **conta pessoal** informada pelo usuário, o caminho recomendado para esta POC está detalhado em [docs/aws_access.md](docs/aws_access.md): criar um usuário IAM `medallion-poc-operator` com acesso ao console e MFA, anexar as políticas específicas do projeto e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap deve ser removida depois da Sprint 1.
+
+Após criar o usuário no console, execute na raiz do projeto:
 
 ```bash
 export PATH="$PWD/.tools/bin:$PATH"
-aws configure sso --profile medallion-poc
-aws sso login --profile medallion-poc
+aws login --profile medallion-poc
 aws sts get-caller-identity --profile medallion-poc
 ```
 
-Na configuração SSO, informe os valores fornecidos pelo administrador. Confira que o ARN retornado não termina em `:root`. Se a conta não usa SSO, configure um perfil de usuário/role IAM existente conforme o procedimento da sua organização; não salve chaves no projeto nem envie credenciais no chat.
+Confira que o ARN retornado termina em `user/medallion-poc-operator`, nunca em `:root`. Se a conta já tiver IAM Identity Center de uma AWS Organization, use o fluxo SSO do guia em vez de criar outro usuário IAM.
 
 Depois da autenticação, escolha um e-mail que receberá alertas e execute:
 
@@ -66,7 +67,7 @@ bash scripts/provision_aws.sh
 
 Troque `SEU_EMAIL_DE_ALERTA` pelo endereço real. O script cria **primeiro** um orçamento mensal em USD com avisos em 80% e 100%, depois o bucket privado, criptografia SSE-S3, bloqueio público, versionamento e exigência de TLS. O orçamento avisa; ele não impede gastos. `us-east-1` é a região padrão desta POC e deve ser mantida em todas as etapas; outro valor também funciona se escolhido antes do provisionamento. Verifique o limite e o destinatário de um orçamento já existente, pois o script não os altera.
 
-Se houver um usuário IAM de ingestão já criado, o administrador pode associar a política mínima à Bronze:
+Se futuramente houver uma identidade **separada** somente para ingestão Bronze, o administrador pode associar a política mínima a um usuário IAM existente:
 
 ```bash
 export POC_INGEST_USER='NOME_DO_USUARIO_IAM_EXISTENTE'

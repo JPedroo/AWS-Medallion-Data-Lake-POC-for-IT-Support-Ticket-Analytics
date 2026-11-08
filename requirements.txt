@@ -1,3 +1,3 @@
-boto3==1.43.126
+boto3[crt]==1.43.126
 kagglehub==1.0.3
 pyspark==4.3.0
