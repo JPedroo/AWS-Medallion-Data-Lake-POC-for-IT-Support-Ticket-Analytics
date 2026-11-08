@@ -13,7 +13,7 @@ Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_s
 - [x] Licença, versão, arquivo, esquema, codificação, delimitador, amostra e indicadores documentados.
 - [x] Git local e remoto `origin` configurados; dependências fixadas; dados e segredos ignorados.
 - [x] Python, Java, AWS CLI e job PySpark mínimo validados localmente.
-- [ ] Usuário IAM da conta pessoal criado com MFA; perfil `aws login` não root autenticado e permissões verificadas. Guia e políticas de exemplo em `docs/aws_access.md` e `config/`.
+- [ ] Usuário IAM da conta pessoal criado com MFA; perfil `aws login` não root autenticado e permissões verificadas. Guia detalhado, com sequência de console e Terminal, em `docs/aws_access.md`; políticas de exemplo em `config/`.
 - [ ] Orçamento mensal com alertas criado antes dos recursos de dados.
 - [ ] Bucket privado em uma região, bloqueio público, criptografia e versionamento verificados.
 - [ ] Política IAM mínima associada a identidade de ingestão existente, se aplicável.

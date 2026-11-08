@@ -28,7 +28,7 @@ s3://<bucket>/bronze/dataset=multilingual-customer-support-tickets/version=14/sh
 
 - Autenticação por perfil AWS CLI/SSO ou credenciais temporárias. Não usar root nem guardar chaves no repositório.
 - O script `scripts/provision_aws.sh` cria orçamento primeiro; depois bucket com bloqueio de acesso público, propriedade `BucketOwnerEnforced`, SSE-S3, versionamento e política que exige TLS.
-- Para a conta pessoal, [docs/aws_access.md](docs/aws_access.md) descreve um usuário IAM com login temporário via AWS CLI: política runtime para S3/Athena/Glue e política temporária de bootstrap para Budgets e configuração do bucket. `scripts/create_ingest_policy.sh` permanece opcional para uma identidade separada de ingestão apenas em `bronze/`.
+- Para a conta pessoal, [docs/aws_access.md](docs/aws_access.md) contém um roteiro sequencial para quem começa no IAM: conta root, preparo dos JSON, cliques no console, MFA, perfil local, provisionamento e ingestão. A política runtime cobre S3/Athena/Glue; a política temporária de bootstrap cobre Budgets e configuração do bucket. `scripts/create_ingest_policy.sh` permanece opcional para uma identidade separada de ingestão apenas em `bronze/`.
 - O orçamento emite alertas, mas não interrompe cobranças automaticamente. Consulte custo real na conta após o uso; nenhum valor de consumo AWS foi observado nesta sessão.
 
 ## Operação e validação

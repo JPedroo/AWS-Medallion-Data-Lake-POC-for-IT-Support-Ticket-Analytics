@@ -100,3 +100,40 @@ Configurar perfil AWS não root (SSO ou role existente), confirmar conta e e-mai
 ### Próxima atividade planejada
 
 Criar o usuário/políticas pelo console, executar `aws login --profile medallion-poc`, confirmar ARN não root, provisionar orçamento/bucket pelo CLI, ingerir e validar Bronze; remover a política temporária de bootstrap após o checkpoint C3.
+
+## Sessão 3 — 2026-11-08 — Esclarecimento do acesso AWS
+
+### Atividades realizadas
+
+- Reescrito o guia de acesso da conta pessoal após o usuário informar que não conhecia os passos a partir da verificação da identidade administradora.
+- Organizado um roteiro único com glossário, nove passos, cliques no console IAM, comandos do Terminal para preparar/copiar políticas, MFA, login do CLI, provisionamento e ingestão.
+- Conferidas novamente as instruções oficiais AWS para login do CLI, criação de política/usuário IAM, MFA e entrada pelo link do usuário IAM.
+
+### Arquivos criados ou alterados
+
+`docs/aws_access.md`, `README.md`, `Plan.md`, `Documentation.md`, `docs/diario_do_projeto.md`.
+
+### Comandos e testes executados
+
+- `sed -n` e `rg` para revisar o guia, os scripts, as políticas e os documentos de entrada.
+- `git status --short --branch` confirmou a branch `main` limpa no começo da sessão.
+- `git diff --check` confirmou ausência de problemas de formatação após a reescrita.
+
+### Problemas encontrados e soluções
+
+- O guia anterior pressupunha familiaridade com root, usuário IAM, política JSON e perfil CLI. Foram adicionadas definições, instruções de copiar e colar no macOS e resultados esperados por etapa.
+- Ainda não há perfil AWS autenticado nesta máquina; a intervenção manual no console permanece necessária.
+
+### Decisões técnicas
+
+- Manter o uso do console apenas para a criação da primeira identidade e das políticas, pois não há perfil CLI inicial. Provisionar orçamento e bucket com AWS CLI após o login IAM.
+- Preservar as políticas de escopo específico e a remoção da política temporária de bootstrap após a Sprint 1.
+
+### Resultados, custos e evidências
+
+- Guia revisado e alinhado aos scripts existentes. Nenhuma chamada à conta AWS foi feita nesta sessão; orçamento, bucket e Bronze continuam pendentes. Nenhum custo AWS foi medido.
+- Evidências: `docs/aws_access.md`, políticas em `config/` e documentação oficial AWS citada no guia.
+
+### Próxima atividade planejada
+
+Usuário seguirá os passos 1 a 7 para criar e autenticar `medallion-poc-operator`. Com o perfil funcional, executar provisionamento CLI, ingestão Bronze e validação S3; registrar evidências e remover `MedallionPocBootstrap`.

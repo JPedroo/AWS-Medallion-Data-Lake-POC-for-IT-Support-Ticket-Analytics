@@ -42,7 +42,7 @@ O script fixa a versão 14 e verifica SHA-256 antes da ingestão. A opção Pand
 
 ## Intervenção manual para acesso AWS
 
-Para a **conta pessoal** informada pelo usuário, o caminho recomendado para esta POC está detalhado em [docs/aws_access.md](docs/aws_access.md): criar um usuário IAM `medallion-poc-operator` com acesso ao console e MFA, anexar as políticas específicas do projeto e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap deve ser removida depois da Sprint 1.
+Para a **conta pessoal** informada pelo usuário, siga os **passos 1 a 9**, em ordem, em [docs/aws_access.md](docs/aws_access.md). O guia mostra os cliques no console, como copiar as políticas do Mac, criar o usuário IAM `medallion-poc-operator`, ativar MFA e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap deve ser removida depois da Sprint 1.
 
 Após criar o usuário no console, execute na raiz do projeto:
 
