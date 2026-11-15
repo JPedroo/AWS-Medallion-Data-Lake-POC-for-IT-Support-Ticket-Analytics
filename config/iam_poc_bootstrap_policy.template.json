@@ -5,7 +5,7 @@
       "Sid": "BudgetForPoc",
       "Effect": "Allow",
       "Action": ["budgets:ViewBudget", "budgets:ModifyBudget"],
-      "Resource": "arn:aws:budgets::123456789012:budget/medallion-it-tickets-poc"
+      "Resource": "arn:aws:budgets::822218623538:budget/medallion-it-tickets-poc"
     },
     {
       "Sid": "BudgetBillingDependencyTemporary",
@@ -32,7 +32,7 @@
         "s3:PutBucketPolicy",
         "s3:GetBucketPolicy"
       ],
-      "Resource": "arn:aws:s3:::medallion-it-tickets-poc-123456789012-us-east-1"
+      "Resource": "arn:aws:s3:::medallion-it-tickets-poc-822218623538-us-east-1"
     }
   ]
 }

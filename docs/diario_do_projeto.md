@@ -304,3 +304,53 @@ Confirmar pelo console administrador que MFA está ativo no usuário `medallion-
 ### Próxima atividade planejada
 
 Iniciar a Sprint 2 somente quando solicitada: regras de qualidade, Silver e Gold em Parquet/Snappy e catálogo/consultas Athena.
+
+## Sessão 8 — 2026-11-15 — Conclusão da Sprint 2
+
+### Atividades realizadas
+
+- Implementado o processamento PySpark da Bronze versionada para Silver, com normalização, ID derivado, deduplicação, classificação de qualidade, métricas e reconciliação.
+- Criadas duas Gold em Parquet/Snappy: por tipo/prioridade e por fila/idioma. As somas foram comparadas ao total de linhas válidas.
+- Implementada publicação condicional no S3 com checksum, SSE-S3 e metadados de proveniência. Criados DDLs Athena e rotina para registrar tabelas e executar seis verificações SQL.
+- Após reautenticação do perfil IAM, baixada a Bronze do S3 e publicados os três Parquet e o JSON de qualidade no mesmo bucket. Registrados banco e três tabelas externas; executadas seis validações Athena.
+- Confirmadas as localizações das tabelas no Glue e a idempotência por comparação dos IDs de versão S3 antes/depois de uma reexecução.
+- Atualizados plano, documentação técnica, perfil do dataset, README e guia da Sprint 2.
+
+### Arquivos criados ou alterados
+
+`src/build_sprint2.py`, `src/catalog_athena.py`, `tests/test_sprint2.py`, `sql/*.sql`, `docs/sprint2.md`, `docs/aws_access.md`, `docs/dataset.md`, `README.md`, `Plan.md`, `Documentation.md` e este diário. As duas políticas IAM em `config/` já estavam modificadas ao início da sessão e não foram alteradas nesta implementação.
+
+### Comandos e testes executados
+
+- `SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py --source data/raw/dataset-tickets-multi-lang3-4k.csv` → conclusão local.
+- `.venv/bin/python -m unittest discover -s tests -v` → três testes aprovados, incluindo casos sintéticos de deduplicação/rejeição e publicação idempotente simulada.
+- `shasum -a 256 data/processed/*/*.parquet data/processed/quality.json` → demonstrou que os bytes Parquet podem variar entre execuções do Spark, apesar de métricas e conteúdo lógico iguais; a publicação foi ajustada para usar proveniência e versão do pipeline.
+- `aws login --profile medallion-poc` e `aws sts get-caller-identity` → sessão renovada e usuário IAM esperado confirmado.
+- `aws s3api head-bucket --expected-bucket-owner 822218623538` e `head-object` da Bronze → bucket e fonte da mesma conta confirmados.
+- `SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py --bucket ... --profile medallion-poc --publish` → quatro objetos publicados. Reexecução com `--source` local preservou os quatro IDs de versão.
+- `.venv/bin/python src/catalog_athena.py --bucket ... --profile medallion-poc` → quatro DDLs e seis validações Athena concluídos. `aws glue get-table` confirmou os três prefixos S3.
+
+### Problemas encontrados e soluções
+
+- O sandbox bloqueou a porta local do Java/PySpark. A validação local foi repetida em execução permitida e concluiu.
+- O login do perfil AWS expirou. O usuário informou que esqueceu a senha do IAM; foi fornecido o caminho do console para redefini-la com uma identidade administradora. Nenhum código ou senha deve ser enviado no chat.
+- A revisão automática bloqueou a primeira tentativa de publicação por não conseguir confirmar que o destino do payload privado era autorizado. Foram verificados por leitura o usuário STS, o proprietário esperado do bucket e a Bronze original no mesmo bucket; o script passou a exigir `ExpectedBucketOwner` nas operações S3. A nova tentativa foi permitida e concluiu.
+- O perfil runtime não permite ler as configurações de bloqueio público ou criptografia padrão do bucket; não foram ampliadas permissões apenas para essas consultas. Os quatro objetos publicados foram confirmados com SSE-S3 por `head-object`.
+
+### Decisões técnicas
+
+- Manter JSON de qualidade fora do prefixo Parquet da tabela Silver, evitando leitura indevida pelo Athena.
+- Não sobrescrever objetos Parquet publicados para a mesma origem e versão do pipeline; versões do bucket permanecem controladas. Se a lógica mudar, atualizar a versão do pipeline e revisar os destinos.
+- Usar DDL explícito em vez de Crawler e resultado Athena em `athena-results/`.
+
+### Resultados, custos e evidências
+
+- 4.000 linhas de origem, 4.000 Silver, 0 duplicatas, 4.000 válidas, 0 rejeitadas, 468 assuntos vazios, 1 descrição vazia, 0 linhas com dimensões `unknown`.
+- As duas Gold somaram 4.000. Parquet local: Silver 3.866.831 bytes; Gold tipo/prioridade 1.170 bytes; Gold fila/idioma 1.605 bytes nesta execução.
+- Publicados quatro objetos no S3; os tamanhos e SSE-S3 foram confirmados por `head-object`. A reexecução preservou todos os IDs de versão.
+- As seis consultas Athena passaram: 4.000 válidos, 0 rejeitados, soma 4.000 nas duas Gold e zero divergências por grupo. `DataScannedInBytes` somou 7.478 bytes; isto não é custo faturado.
+- O custo observado não foi consultado porque a política temporária de Budgets foi removida após a Sprint 1. O orçamento existente continua sendo o controle de alerta conhecido, sem nova leitura nesta sessão.
+
+### Próxima atividade planejada
+
+Iniciar a Sprint 3 quando solicitada: configurar consumo no Grafana local, reunir evidências, conferir custo observado com uma identidade que tenha permissão de Budgets e preparar relatório/vídeo.

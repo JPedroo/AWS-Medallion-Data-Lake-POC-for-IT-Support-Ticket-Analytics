@@ -49,11 +49,24 @@ O cabeçalho na ordem de origem é `subject,body,answer,type,queue,priority,lang
 
 1. **Volume**: registros de entrada, válidos, rejeitados e duplicados por execução; reconciliar `entrada = mantidos + duplicados` e `mantidos = válidos + rejeitados`.
 2. **Distribuição operacional**: tickets válidos por `type`, `priority` e `queue`; idioma como dimensão secundária. Não inferir categorias a partir do texto.
-3. **Qualidade**: percentual de `subject` vazio, `body` vazio, IDs derivados, valores `unknown` e rejeições. A regra de rejeição proposta é assunto **e** descrição vazios; cada campo vazio isolado é alerta.
+3. **Qualidade**: percentual de `subject` vazio, `body` vazio, IDs derivados, valores `unknown` e rejeições. A regra implementada é assunto **e** descrição vazios; cada campo vazio isolado é alerta.
 4. **Rastreabilidade**: versão, hash, bytes e data de ingestão do CSV; duração do processamento e tamanhos CSV/Parquet quando Silver/Gold existirem.
 5. **Consulta**: bytes lidos no Athena e custo observado somente após execução real.
 
-Como não há ID de origem, a Silver deverá criar um hash estável de campos definidos e documentar a regra de desempate. Como não há data de evento confiável, nenhum indicador de série temporal de negócio ou SLA será criado; `ingested_at` é apenas metadado de pipeline.
+Como não há ID de origem, a Silver cria SHA-256 do JSON estruturado dos 17 campos normalizados, na ordem original. Registros com o mesmo ID são deduplicados por conteúdo normalizado; a ordenação pelo conteúdo define o desempate. Como não há data de evento confiável, nenhum indicador de série temporal de negócio ou SLA é criado; `ingested_at` é apenas metadado de pipeline. Veja [sprint2.md](sprint2.md).
+
+### Qualidade observada na Silver local (2026-11-15)
+
+| Métrica | Valor |
+| --- | ---: |
+| Linhas de origem / Silver | 4.000 / 4.000 |
+| Duplicatas / rejeições | 0 / 0 |
+| Válidas | 4.000 |
+| Assunto vazio após normalização | 468 (11,70%) |
+| Descrição vazia após normalização | 1 (0,03%) |
+| Linhas com dimensão `unknown` | 0 |
+
+Ambas as Gold somam 4.000 tickets válidos. A execução Athena de 2026-11-15 confirmou essas contagens e zero divergências por grupo.
 
 ## Evidência reproduzível
 

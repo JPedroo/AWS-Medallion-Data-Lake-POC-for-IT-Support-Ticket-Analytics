@@ -1,8 +1,10 @@
 # POC: Data Lake Medalhão na AWS para tickets de suporte
 
-Sprint 1 da POC acadêmica de três semanas descrita no briefing fornecido pelo usuário. O fluxo preserva um CSV versionado do Kaggle na camada Bronze de um bucket privado, acompanhado por manifesto auditável. Silver/Gold, Athena e Grafana estão planejados para as Sprints 2 e 3.
+POC acadêmica de três semanas. A Bronze preserva um CSV versionado do Kaggle em um bucket privado, acompanhado por manifesto auditável. A Sprint 2 transforma os dados em Silver e Gold com PySpark local e registra as tabelas no Athena. Grafana permanece na Sprint 3.
 
 **Sprint 1 concluída em 2026-11-08:** CSV original e manifesto publicados e validados na Bronze do bucket privado em `us-east-1`. O orçamento mensal de US$ 5 tem alertas em 80% e 100%. O usuário confirmou no console o MFA ativo e a retirada da política IAM temporária `MedallionPocBootstrap`; após isso, o perfil da POC continuou lendo a Bronze. O gasto calculado exibido após a ingestão era US$ 0,00, sujeito ao atraso de contabilização da AWS.
+
+**Sprint 2 concluída em 2026-11-15:** Silver e duas Gold publicadas em Parquet/Snappy no mesmo bucket privado. O banco e as três tabelas externas foram criados; seis consultas Athena reconciliaram os resultados. A sessão IAM foi renovada após redefinição de senha pelo usuário. Veja [docs/sprint2.md](docs/sprint2.md).
 
 ## Fonte e atribuição
 
@@ -12,7 +14,7 @@ Sprint 1 da POC acadêmica de três semanas descrita no briefing fornecido pelo 
 
 - macOS com Python 3.11 ou superior e Java 17 ou superior. Validados nesta máquina: Python 3.14.6, Java 17.0.19, PySpark 4.3.0.
 - Git e acesso ao repositório remoto.
-- Para executar na AWS: perfil CLI de uma identidade não root com permissões de Budgets e S3. Para criar política IAM, permissões IAM adicionais.
+- Para executar a Sprint 2 na AWS: perfil CLI `medallion-poc` de identidade não root, com a política runtime existente para S3, Athena e Glue.
 
 Na raiz do repositório:
 
@@ -98,6 +100,30 @@ shasum -a 256 data/staging/bronze.csv
 ```
 
 No retorno do primeiro `head-object`, confira `ContentLength=6873542`, `Metadata.sha256` igual ao hash acima e `ChecksumSHA256` correspondente. O manifesto deve declarar `source_rows=4000`. O resultado do `shasum` deve coincidir com o hash acima. Nesta execução, o CSV baixado foi comparado byte a byte com o original e a reexecução da ingestão preservou os IDs de versão dos dois objetos.
+
+## Sprint 2 — Silver, Gold e Athena
+
+Para validar localmente sem acessar AWS:
+
+```bash
+SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py \
+  --source data/raw/dataset-tickets-multi-lang3-4k.csv
+cat data/processed/quality.json
+```
+
+Para reproduzir a transformação diretamente da Bronze publicada e enviar Silver/Gold:
+
+```bash
+export AWS_PROFILE=medallion-poc AWS_REGION=us-east-1
+aws login --profile "$AWS_PROFILE"  # somente se a sessão tiver expirado
+export POC_BUCKET="medallion-it-tickets-poc-$(aws sts get-caller-identity --profile "$AWS_PROFILE" --query Account --output text)-$AWS_REGION"
+SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py \
+  --bucket "$POC_BUCKET" --region "$AWS_REGION" --profile "$AWS_PROFILE" --publish
+.venv/bin/python src/catalog_athena.py \
+  --bucket "$POC_BUCKET" --region "$AWS_REGION" --profile "$AWS_PROFILE"
+```
+
+O segundo script cria o banco e três tabelas externas e executa seis consultas de reconciliação. Os DDLs e consultas exploratórias ficam em [sql](sql); regras, caminhos S3, métricas, validação e passos de console estão em [docs/sprint2.md](docs/sprint2.md). Os Parquet locais e a evidência Athena ficam em `data/processed/`, ignorado pelo Git. Consultas Athena gravam resultados em `athena-results/` no bucket; isso e as operações S3 podem gerar cobrança, monitorada pelo orçamento existente.
 
 ## Repositório e continuidade
 

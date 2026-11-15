@@ -100,6 +100,8 @@ O `aws login` pergunta a região no primeiro uso: digite `us-east-1` ou pression
 
 O perfil fica em `~/.aws/config`; a sessão temporária é armazenada em `~/.aws/login/cache`, fora do projeto. Após a sessão expirar, repita `aws login --profile medallion-poc`. O boto3 deste projeto usa o mesmo perfil, pois `boto3[crt]` está em `requirements.txt`.
 
+Se você esquecer a senha de `medallion-poc-operator`, **não use a senha root no campo desse usuário**. Na conta desta POC, o campo **Account ID or alias** é `822218623538`. Entre com uma identidade administradora e abra **IAM > Users > medallion-poc-operator > Security credentials > Console sign-in > Manage console access > Reset password**. Defina uma nova senha para o usuário IAM e faça login novamente com MFA. [Procedimento oficial da AWS](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_passwords_admin-change-user.html). Não compartilhe senha, código MFA nem código de autorização do CLI no chat.
+
 ### Passo 8 — Criar orçamento e bucket pela AWS CLI
 
 **Nesta conta, este passo já foi concluído.** Após a Sprint 1, `MedallionPocBootstrap` foi retirada conforme confirmação do usuário; o perfil `medallion-poc` já não deve executar novamente o script de provisionamento. Os comandos abaixo ficam como registro para a configuração inicial em outra conta.

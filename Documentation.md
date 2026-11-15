@@ -1,19 +1,21 @@
-# Documentação técnica — Sprint 1
+# Documentação técnica — Sprints 1 e 2
 
-## Arquitetura autorizada
+## Arquitetura
 
 ```mermaid
 flowchart LR
     K[Kaggle, versão 14] --> L[CSV original local]
     L --> I[Python: validação, SHA-256 e boto3]
     I --> B[S3 privado: bronze/ CSV + manifesto]
-    B -. Sprint 2 .-> S[PySpark local: Silver Parquet]
-    S -. Sprint 2 .-> G[Gold Parquet]
-    G -. Sprints 2 e 3 .-> A[Athena + Glue Data Catalog]
+    B --> S[PySpark local: Silver Parquet e métricas]
+    S --> G[Gold Parquet: duas agregações]
+    G --> A[Athena + Glue Data Catalog]
     A -. Sprint 3 .-> F[Grafana local]
 ```
 
 Um bucket armazena os prefixos `bronze/`, `silver/`, `gold/` e `athena-results/`. Prefixos S3 são lógicos: só aparecem após a gravação de objetos. A Bronze recebe o arquivo sem alteração, com chave baseada em SHA-256. O manifesto fica ao lado do CSV e registra origem, licença, versão, esquema, hash, tamanho, linhas, horário UTC e identificador da execução.
+
+A Sprint 2 lê a Bronze, produz Silver e duas Gold em Parquet/Snappy e usa DDLs explícitos para o Athena. Regras, esquema, caminhos e comandos estão em [docs/sprint2.md](docs/sprint2.md). A execução local, a publicação S3 e as consultas Athena foram validadas em 2026-11-15.
 
 ## Convenções de objeto
 
@@ -37,6 +39,10 @@ Ver [README.md](README.md) para comandos completos. O perfil `medallion-poc` foi
 
 O CSV original e o manifesto foram enviados à Bronze. `head-object` confirmou CSV com 6.873.542 bytes, metadado SHA-256 e checksum SHA-256 em base64; os dois objetos usam SSE-S3. Uma cópia baixada do CSV foi idêntica em bytes ao original, e o manifesto declarou 4.000 linhas, 17 campos, versão 14 e licença CC BY 4.0. A reexecução retornou os mesmos IDs de versão dos dois objetos. O orçamento informou US$ 0,00 de gasto calculado no momento da consulta, sujeito a atraso de contabilização. O usuário confirmou no console o MFA ativo e a retirada de `MedallionPocBootstrap`. O CLI confirmou depois que `medallion-poc` ainda consegue ler o CSV na Bronze; a confirmação do estado IAM veio do usuário, pois esse perfil não possui permissão para consultá-lo.
 
+Na Sprint 2, o STS confirmou `user/medallion-poc-operator` na mesma conta do bucket; `head-bucket` confirmou o proprietário esperado e `head-object` a Bronze original. O S3 retornou Silver de 3.866.831 bytes, Gold tipo/prioridade de 1.170 bytes, Gold fila/idioma de 1.605 bytes e métricas de 533 bytes, todos com SSE-S3. Uma reexecução preservou os IDs de versão dos quatro objetos. O Glue retornou os três prefixos S3 previstos. Seis consultas Athena passaram, inclusive as duas comparações por grupo entre Gold e Silver; o total registrado de bytes lidos foi 7.478. Essa medida não equivale a custo faturado.
+
 ## Limitações
 
 O perfil do dataset consta em [docs/dataset.md](docs/dataset.md). O CSV de 4.000 linhas não contém ID ou data de negócio; a interpretação como tickets ITSM é aproximada. A rotina de upload usa `put_object` de uma só parte e foi dimensionada para o arquivo escolhido de 6,9 MB. Alteração de fonte/arquivo exige nova validação e atualização do hash fixado.
+
+O ID Silver é derivado dos 17 campos normalizados, inclusive `answer`. Uma alteração em qualquer um deles muda o ID. Dados Silver e Gold são derivados de uma fonte fixa, com prefixos S3 fixos e versão do pipeline registrada nos metadados; para trocar a fonte ou a lógica, revisar a versão e a estratégia de publicação antes de executar. O JSON de qualidade fica fora do prefixo Parquet, para que o Athena leia somente arquivos da tabela.

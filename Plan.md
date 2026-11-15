@@ -1,11 +1,11 @@
 # Plano da POC em três sprints
 
-Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_semanas.pdf`, fornecido pelo usuário. A Sprint 1 é o trabalho autorizado nesta sessão; as demais são planejamento.
+Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_semanas.pdf`, fornecido pelo usuário, e detalhamento da Sprint 2 informado na conversa.
 
-| Sprint | Período | Entrega | Estado em 2026-11-08 |
+| Sprint | Período | Entrega | Estado em 2026-11-15 |
 | --- | --- | --- | --- |
 | 1 — Preparação e Bronze | Dias 1–5 | Dataset validado, ambiente, orçamento e bucket privados, CSV original e manifesto no S3 | **Concluída**: entrega técnica validada; MFA e retirada da política temporária confirmados pelo usuário no console |
-| 2 — Silver e Gold | Dias 6–11 | Qualidade, Parquet/Snappy, duas tabelas Gold, DDL/consultas Athena | Planejada |
+| 2 — Processamento e consulta | Dias 6–10 | Qualidade, Parquet/Snappy, duas tabelas Gold, DDL/consultas Athena | **Concluída**: Silver/Gold publicadas; banco, tabelas e consultas Athena validados |
 | 3 — Consumo e entrega | Dias 12–15 | Grafana local, evidências, custo observado, relatório e vídeo | Planejada |
 
 ## Sprint 1 — critérios de aceite
@@ -29,3 +29,12 @@ Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_s
 - Definir `quality_status` e reconciliar registros antes de agregar.
 - Gravar Silver e Gold em Parquet/Snappy; criar o catálogo com DDL versionado, sem Crawler.
 - Evitar qualquer métrica temporal de negócio ou SLA por falta de datas na origem.
+
+## Sprint 2 — critérios de aceite
+
+- [x] Transformação Silver implementada em PySpark: limpeza, padronização, ID estável, deduplicação e `quality_status`.
+- [x] Reconciliação e métricas de qualidade locais: 4.000 entradas, 4.000 mantidas, 0 duplicatas, 4.000 válidas e 0 rejeitadas.
+- [x] Silver e duas Gold gravadas localmente em Parquet/Snappy; agregações locais reconciliadas.
+- [x] Publicação S3 e DDL/consultas Athena implementadas e versionadas no repositório.
+- [x] Publicação de Silver/Gold no bucket da POC e verificação dos quatro objetos S3 com SSE-S3; reexecução preservou os IDs de versão.
+- [x] Banco e três tabelas externas no Athena criados; seis consultas de validação executadas e confrontadas com as métricas locais. Os prefixos de cada tabela foram confirmados no Glue.
