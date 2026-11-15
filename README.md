@@ -1,132 +1,53 @@
-# POC: Data Lake Medalhão na AWS para tickets de suporte
+# Data Lake Medalhão na AWS para tickets de suporte
 
-POC acadêmica de três semanas. A Bronze preserva um CSV versionado do Kaggle em um bucket privado, acompanhado por manifesto auditável. A Sprint 2 transforma os dados em Silver e Gold com PySpark local e registra as tabelas no Athena. Grafana permanece na Sprint 3.
+Prova de conceito acadêmica de um data lake para análise de tickets de suporte. O projeto usa um conjunto de dados público do Kaggle, processa os registros com PySpark e disponibiliza tabelas em Parquet para consulta no Amazon Athena. As camadas Bronze, Silver e Gold e o catálogo Athena estão implementados; o consumo em Grafana integra a etapa seguinte.
 
-**Sprint 1 concluída em 2026-11-08:** CSV original e manifesto publicados e validados na Bronze do bucket privado em `us-east-1`. O orçamento mensal de US$ 5 tem alertas em 80% e 100%. O usuário confirmou no console o MFA ativo e a retirada da política IAM temporária `MedallionPocBootstrap`; após isso, o perfil da POC continuou lendo a Bronze. O gasto calculado exibido após a ingestão era US$ 0,00, sujeito ao atraso de contabilização da AWS.
+## Fonte de dados
 
-**Sprint 2 concluída em 2026-11-15:** Silver e duas Gold publicadas em Parquet/Snappy no mesmo bucket privado. O banco e as três tabelas externas foram criados; seis consultas Athena reconciliaram os resultados. A sessão IAM foi renovada após redefinição de senha pelo usuário. Veja [docs/sprint2.md](docs/sprint2.md).
+O dataset é [Customer IT Support - Ticket Dataset](https://www.kaggle.com/datasets/tobiasbueck/multilingual-customer-support-tickets), de Tobias Bueck, sob licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). A POC usa o arquivo `dataset-tickets-multi-lang3-4k.csv` da versão 14, com 4.000 registros e 17 campos. Ele inclui assunto, descrição, resposta, tipo, fila, prioridade, idioma e tags.
 
-## Fonte e atribuição
+O CSV original contém texto livre e não é versionado neste repositório. O esquema, o perfil dos dados e as limitações do recorte estão em [docs/dataset.md](docs/dataset.md).
 
-“Customer IT Support - Ticket Dataset”, de Tobias Bueck, [Kaggle](https://www.kaggle.com/datasets/tobiasbueck/multilingual-customer-support-tickets), licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Usamos o arquivo original `dataset-tickets-multi-lang3-4k.csv` da versão 14 (4.000 registros). Consulte [docs/dataset.md](docs/dataset.md) para esquema, perfil e indicadores. O CSV contém texto livre e fica fora do Git.
+## Arquitetura
 
-## Pré-requisitos locais
+```mermaid
+flowchart LR
+    K[Dataset Kaggle] --> B[Bronze: CSV original e manifesto no S3]
+    B --> S[Silver: limpeza, qualidade e deduplicação em Parquet]
+    S --> G[Gold: duas agregações em Parquet]
+    G --> A[Glue Data Catalog e Athena]
+```
 
-- macOS com Python 3.11 ou superior e Java 17 ou superior. Validados nesta máquina: Python 3.14.6, Java 17.0.19, PySpark 4.3.0.
-- Git e acesso ao repositório remoto.
-- Para executar a Sprint 2 na AWS: perfil CLI `medallion-poc` de identidade não root, com a política runtime existente para S3, Athena e Glue.
+- **Bronze:** preserva o CSV original e um manifesto com informações da fonte e verificação de integridade.
+- **Silver:** padroniza os campos, cria um identificador derivado, remove duplicatas e registra métricas de qualidade.
+- **Gold:** oferece contagens por tipo e prioridade e por fila e idioma, considerando apenas registros válidos.
+- **Consulta:** três tabelas externas no catálogo permitem explorar Silver e Gold com SQL no Athena.
 
-Na raiz do repositório:
+## Requisitos
+
+- Python 3.11 ou superior e Java 17 ou superior para execução local com PySpark.
+- Dependências Python de [requirements.txt](requirements.txt).
+- AWS CLI v2 e um perfil com acesso aos serviços S3, Athena e Glue para reproduzir as etapas na AWS.
+- Acesso ao Kaggle para baixar a versão do dataset usada na POC.
+
+Para preparar o ambiente local:
 
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-java -version
 SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python scripts/check_spark.py
 ```
 
-O instalador oficial da AWS CLI v2 foi usado nesta máquina para instalar `aws` em `.tools/bin/`. Em outro Mac, siga o [guia oficial da AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) e verifique `aws --version`. Para esta cópia do projeto:
+Os diretórios `data/`, `.venv/` e `.tools/` ficam fora do Git. Os testes podem ser executados com:
 
 ```bash
-export PATH="$PWD/.tools/bin:$PATH"
-aws --version
+SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-## Baixar e validar a fonte
+## Documentação
 
-```bash
-.venv/bin/python src/fetch_dataset.py
-.venv/bin/python src/ingest_bronze.py \
-  --source data/raw/dataset-tickets-multi-lang3-4k.csv --dry-run
-```
-
-O script fixa a versão 14 e verifica SHA-256 antes da ingestão. A opção Pandas do `kagglehub` mencionada no pedido carrega o conteúdo em memória, mas a Bronze exige preservar o **arquivo original**; por isso usamos o download direto do arquivo versionado. O cliente Kaggle ainda usa cache/download local nos dois modos.
-
-## Intervenção manual para acesso AWS
-
-Para a **conta pessoal** informada pelo usuário, siga os **passos 1 a 9**, em ordem, em [docs/aws_access.md](docs/aws_access.md). O guia mostra os cliques no console, como copiar as políticas do Mac, criar o usuário IAM `medallion-poc-operator`, ativar MFA e autenticar o CLI com `aws login`. A AWS CLI v2 e o boto3 desta POC usam credenciais temporárias nesse fluxo, sem criar access keys permanentes. A política temporária de bootstrap foi retirada após a validação da Sprint 1, conforme confirmação do usuário no console.
-
-Após criar o usuário no console, execute na raiz do projeto:
-
-```bash
-export PATH="$PWD/.tools/bin:$PATH"
-aws login --profile medallion-poc
-aws sts get-caller-identity --profile medallion-poc
-```
-
-Confira que o ARN retornado termina em `user/medallion-poc-operator`, nunca em `:root`. Se a conta já tiver IAM Identity Center de uma AWS Organization, use o fluxo SSO do guia em vez de criar outro usuário IAM.
-
-O provisionamento inicial foi feito com os comandos abaixo. Eles ficam documentados para reprodução em outra conta; após a remoção de `MedallionPocBootstrap`, **não reexecute** `scripts/provision_aws.sh` com o perfil atual, pois ele já não possui acesso a Budgets nem às configurações administrativas do bucket:
-
-```bash
-export AWS_PROFILE=medallion-poc
-export AWS_REGION=us-east-1
-export POC_BUCKET="medallion-it-tickets-poc-$(aws sts get-caller-identity --profile "$AWS_PROFILE" --query Account --output text)-$AWS_REGION"
-export POC_BUDGET_EMAIL='SEU_EMAIL_DE_ALERTA'
-export POC_BUDGET_USD=5
-bash scripts/provision_aws.sh
-```
-
-Troque `SEU_EMAIL_DE_ALERTA` pelo endereço real. O script cria **primeiro** um orçamento mensal em USD com avisos em 80% e 100%, depois o bucket privado, criptografia SSE-S3, bloqueio público, versionamento e exigência de TLS. O orçamento avisa; ele não impede gastos. `us-east-1` é a região padrão desta POC e deve ser mantida em todas as etapas; outro valor também funciona se escolhido antes do provisionamento. Se o orçamento já existir, o script não altera limite nem destinatários; nesta execução, ambos foram conferidos separadamente pelo CLI.
-
-Se futuramente houver uma identidade **separada** somente para ingestão Bronze, o administrador pode associar a política mínima a um usuário IAM existente:
-
-```bash
-export POC_INGEST_USER='NOME_DO_USUARIO_IAM_EXISTENTE'
-bash scripts/create_ingest_policy.sh
-```
-
-Essa identidade separada não foi necessária na Sprint 1: `medallion-poc` já tem permissões de execução para a Bronze. O script opcional não cria usuário nem chave. O perfil usado em `src/ingest_bronze.py` precisa de `s3:GetObject` e `s3:PutObject` em `bronze/`.
-
-## Publicar e conferir a Bronze
-
-```bash
-.venv/bin/python src/ingest_bronze.py \
-  --source data/raw/dataset-tickets-multi-lang3-4k.csv \
-  --bucket "$POC_BUCKET" --region "$AWS_REGION" --profile "$AWS_PROFILE"
-
-SHA256=9aae7120cf459fc27561febe29c7757c6d222bfebff50e8baa868991e57b87d1
-PREFIX="bronze/dataset=multilingual-customer-support-tickets/version=14/sha256=$SHA256"
-aws s3api head-object --profile "$AWS_PROFILE" --region "$AWS_REGION" \
-  --bucket "$POC_BUCKET" --key "$PREFIX/dataset-tickets-multi-lang3-4k.csv" --checksum-mode ENABLED
-aws s3api head-object --profile "$AWS_PROFILE" --region "$AWS_REGION" \
-  --bucket "$POC_BUCKET" --key "$PREFIX/manifest.json"
-mkdir -p data/staging
-aws s3api get-object --profile "$AWS_PROFILE" --region "$AWS_REGION" \
-  --bucket "$POC_BUCKET" --key "$PREFIX/manifest.json" data/staging/manifest.json
-aws s3api get-object --profile "$AWS_PROFILE" --region "$AWS_REGION" \
-  --bucket "$POC_BUCKET" --key "$PREFIX/dataset-tickets-multi-lang3-4k.csv" data/staging/bronze.csv
-shasum -a 256 data/staging/bronze.csv
-```
-
-No retorno do primeiro `head-object`, confira `ContentLength=6873542`, `Metadata.sha256` igual ao hash acima e `ChecksumSHA256` correspondente. O manifesto deve declarar `source_rows=4000`. O resultado do `shasum` deve coincidir com o hash acima. Nesta execução, o CSV baixado foi comparado byte a byte com o original e a reexecução da ingestão preservou os IDs de versão dos dois objetos.
-
-## Sprint 2 — Silver, Gold e Athena
-
-Para validar localmente sem acessar AWS:
-
-```bash
-SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py \
-  --source data/raw/dataset-tickets-multi-lang3-4k.csv
-cat data/processed/quality.json
-```
-
-Para reproduzir a transformação diretamente da Bronze publicada e enviar Silver/Gold:
-
-```bash
-export AWS_PROFILE=medallion-poc AWS_REGION=us-east-1
-aws login --profile "$AWS_PROFILE"  # somente se a sessão tiver expirado
-export POC_BUCKET="medallion-it-tickets-poc-$(aws sts get-caller-identity --profile "$AWS_PROFILE" --query Account --output text)-$AWS_REGION"
-SPARK_LOCAL_IP=127.0.0.1 .venv/bin/python src/build_sprint2.py \
-  --bucket "$POC_BUCKET" --region "$AWS_REGION" --profile "$AWS_PROFILE" --publish
-.venv/bin/python src/catalog_athena.py \
-  --bucket "$POC_BUCKET" --region "$AWS_REGION" --profile "$AWS_PROFILE"
-```
-
-O segundo script cria o banco e três tabelas externas e executa seis consultas de reconciliação. Os DDLs e consultas exploratórias ficam em [sql](sql); regras, caminhos S3, métricas, validação e passos de console estão em [docs/sprint2.md](docs/sprint2.md). Os Parquet locais e a evidência Athena ficam em `data/processed/`, ignorado pelo Git. Consultas Athena gravam resultados em `athena-results/` no bucket; isso e as operações S3 podem gerar cobrança, monitorada pelo orçamento existente.
-
-## Repositório e continuidade
-
-`data/`, `.venv/`, `.tools/` e `.env` estão ignorados no Git. O histórico de trabalho está em [docs/diario_do_projeto.md](docs/diario_do_projeto.md); o plano em [Plan.md](Plan.md); as decisões técnicas em [Documentation.md](Documentation.md). Ao fim de **cada sessão**, atualizar o diário com atividades, arquivos, comandos/testes, problemas e soluções, decisões, resultados/custos/evidências e próxima atividade, além de revisar os três documentos principais.
-
-Teste local da lógica de imutabilidade da Bronze: `.venv/bin/python -m unittest discover -s tests -v`.
+- [Plan.md](Plan.md): etapas e estado do projeto.
+- [Documentation.md](Documentation.md): arquitetura e decisões técnicas.
+- [docs/sprint2.md](docs/sprint2.md): regras de transformação, artefatos, execução e validação.
+- [docs/aws_access.md](docs/aws_access.md): configuração de acesso à AWS.
+- [docs/diario_do_projeto.md](docs/diario_do_projeto.md): histórico das implementações e evidências.
