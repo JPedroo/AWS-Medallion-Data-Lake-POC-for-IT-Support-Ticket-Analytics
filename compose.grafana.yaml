@@ -1,0 +1,20 @@
+services:
+  grafana:
+    image: grafana/grafana:12.1.0
+    container_name: medallion-poc-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - ./data/staging/grafana-aws.env
+    environment:
+      GF_PLUGINS_PREINSTALL_SYNC: grafana-athena-datasource@3.4.2
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+
+volumes:
+  grafana-data:

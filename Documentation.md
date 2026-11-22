@@ -1,4 +1,4 @@
-# Documentação técnica — Sprints 1 e 2
+# Documentação técnica — Sprints 1 a 3
 
 ## Arquitetura
 
@@ -10,12 +10,16 @@ flowchart LR
     B --> S[PySpark local: Silver Parquet e métricas]
     S --> G[Gold Parquet: duas agregações]
     G --> A[Athena + Glue Data Catalog]
-    A -. Sprint 3 .-> F[Grafana local]
+    A --> F[Grafana local: três gráficos]
 ```
 
 Um bucket armazena os prefixos `bronze/`, `silver/`, `gold/` e `athena-results/`. Prefixos S3 são lógicos: só aparecem após a gravação de objetos. A Bronze recebe o arquivo sem alteração, com chave baseada em SHA-256. O manifesto fica ao lado do CSV e registra origem, licença, versão, esquema, hash, tamanho, linhas, horário UTC e identificador da execução.
 
 A Sprint 2 lê a Bronze, produz Silver e duas Gold em Parquet/Snappy e usa DDLs explícitos para o Athena. Regras, esquema, caminhos e comandos estão em [docs/sprint2.md](docs/sprint2.md). A execução local, a publicação S3 e as consultas Athena foram validadas em 2026-11-15.
+
+A Sprint 3 provisiona o Grafana local por arquivos versionados, usa o plugin Athena para três gráficos sobre as Gold e acrescenta uma reexecução com evidências de S3, Glue, Athena, tempo e orçamento. O passo a passo e o estado das verificações estão em [docs/sprint3.md](docs/sprint3.md). A senha Grafana e as credenciais AWS temporárias são arquivos locais ignorados pelo Git.
+
+Em 2026-11-22, a fonte Grafana passou no teste de conexão e as três visualizações consultadas somaram 4.000 tickets cada. A reexecução AWS reconciliou Bronze, Silver e as duas Gold em 19,37 s, e as seis checagens Athena passaram. O orçamento não pôde ser lido pelo perfil runtime (`AccessDeniedException`); portanto o custo atual faturado permanece desconhecido. A evidência técnica detalhada e os IDs de execução estão nos JSON locais descritos em [docs/sprint3.md](docs/sprint3.md).
 
 ## Convenções de objeto
 

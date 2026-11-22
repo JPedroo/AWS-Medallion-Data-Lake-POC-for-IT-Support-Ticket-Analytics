@@ -354,3 +354,46 @@ Iniciar a Sprint 2 somente quando solicitada: regras de qualidade, Silver e Gold
 ### Próxima atividade planejada
 
 Iniciar a Sprint 3 quando solicitada: configurar consumo no Grafana local, reunir evidências, conferir custo observado com uma identidade que tenha permissão de Budgets e preparar relatório/vídeo.
+
+## Sessão 8 — 2026-11-22 — Sprint 3, Grafana e automação de validação
+
+### Atividades realizadas
+
+- Revisitados plano, documentação, código das Sprints 1 e 2, métricas e evidências locais. A fonte fixa continua sendo o CSV de 4.000 registros, sem data de negócio.
+- Criados `compose.grafana.yaml`, fonte Athena provisionada e painel com três gráficos: tipo/prioridade, fila e idioma. O painel usa as duas tabelas Gold e não agenda atualizações automáticas.
+- Criados `scripts/run_grafana.sh`, `scripts/run_sprint3.sh` e `src/collect_sprint3_evidence.py`. O primeiro inicia o Grafana com credenciais AWS temporárias; o segundo reexecuta Silver/Gold e Athena; o terceiro confere Bronze, manifesto, objetos S3, Glue, consultas Athena, duração e orçamento quando permitido.
+- Preparados `docs/sprint3.md` e `docs/relatorio_final.md`; README, plano e documentação técnica foram atualizados.
+
+### Comandos e testes executados
+
+- `bash -n` para os dois scripts shell, `python3 -m json.tool` para o dashboard, `compileall` para o coletor e `git diff --check`: sem erro.
+- `aws --version`: AWS CLI 2.39.6, compatível com `aws login`.
+- `aws sts get-caller-identity` com o perfil existente falhou com `Your session has expired. Please reauthenticate using 'aws login'.`
+- Duas execuções autorizadas de `aws login --profile medallion-poc` ofereceram substituir `user/medallion-poc-operator` por `root`; ambas foram recusadas com `n`. Não houve consulta ou alteração na conta com root.
+- Docker Desktop 29.5.3 iniciado. A imagem `grafana/grafana:12.1.0` e o plugin Athena 3.4.2 foram instalados localmente. A API local retornou HTTP 200 e mostrou os três painéis e a fonte com catálogo, banco, workgroup e bucket corretos. A conexão foi carregada com credenciais fictícias para verificar o provisionamento; os gráficos com dados reais ainda não foram testados.
+- A suíte de testes existente passou: 3 testes. A primeira tentativa no sandbox falhou ao abrir o socket local do PySpark; a execução com acesso ao loopback passou.
+- `build_sprint2.py --source data/raw/dataset-tickets-multi-lang3-4k.csv` reexecutou localmente o pipeline em **10,6 s**: 4.000 entradas, 4.000 Silver, 0 duplicatas, 4.000 válidos, 0 rejeitados, 468 assuntos vazios e uma descrição vazia. Os tamanhos Parquet permaneceram iguais aos registrados na Sprint 2. Saída em `data/processed/sprint3_local_build.json`.
+
+### Resultados, custos e evidências
+
+- Grafana local operacional como serviço e painel provisionado; a consulta real ao Athena aguarda login do usuário IAM.
+- Não houve execução AWS da Sprint 3 nem leitura nova de cobrança nesta sessão. A última evidência real continua sendo a da Sprint 2, com 4.000 válidos e seis consultas Athena aprovadas; o valor faturado atual permanece desconhecido.
+- Arquivos locais `data/staging/grafana-aws.env` e `grafana-admin-password.txt` são ignorados pelo Git e contêm valores temporários/senha. A primeira conexão foi iniciada com credenciais fictícias e deve ser recriada por `bash scripts/run_grafana.sh` após o login IAM.
+
+### Próxima atividade
+
+Concluir login em janela privada como `medallion-poc-operator`, executar `bash scripts/run_grafana.sh` e `bash scripts/run_sprint3.sh`, conferir os três gráficos com dados Athena reais e preencher o relatório final com a evidência e o gasto observado no orçamento ou no console Billing.
+
+### Continuação da sessão — validação AWS e Grafana
+
+- Após abrir uma janela privada com o usuário IAM, `aws login` atualizou o perfil para `arn:aws:iam::822218623538:user/medallion-poc-operator`. `sts get-caller-identity` confirmou conta e ARN; nenhuma operação foi feita com root.
+- `bash scripts/run_grafana.sh` recriou o container com credenciais temporárias do perfil IAM. A API da fonte retornou `200`, `status: OK` e `Data source is working`.
+- `bash scripts/run_sprint3.sh` reexecutou o pipeline AWS e gravou `data/processed/sprint3_evidence.json`. Processamento/publicação: **19,37 s**. Fonte e Silver: 4.000; duplicatas: 0; válidos: 4.000; rejeitados: 0. As duas Gold somam 4.000; as comparações por grupo retornaram zero divergências.
+- O coletor reconferiu checksum e manifesto Bronze, seis objetos S3 com SSE-S3 e IDs de versão, três localizações Glue e dez execuções Athena bem-sucedidas (quatro DDLs e seis checagens). Os checks leram **7.478 bytes**; IDs e durações individuais estão no JSON local.
+- `python3 src/validate_grafana.py` consultou os três gráficos pelo Grafana: 4 tipos, 10 filas e 5 idiomas, todos somando 4.000 tickets. A evidência está em `data/processed/sprint3_grafana_validation.json`.
+- `.venv/bin/python src/collect_grafana_query_stats.py --profile medallion-poc --region us-east-1` identificou seis consultas dos gráficos feitas em duas rodadas, com **2.352 bytes** lidos no Athena. Os IDs e durações estão em `data/processed/sprint3_grafana_athena_stats.json`. O volume técnico das consultas registradas nesta validação, somando checks e gráficos, foi **9.830 bytes**.
+- A leitura de `budgets:DescribeBudget` retornou `AccessDeniedException`; o usuário confirmou não ter acesso ao orçamento no Console. Custo atual faturado **não foi medido**. O último US$ 0,00 citado na Sprint 1 é histórico e não representa o custo de hoje.
+
+### Estado de entrega
+
+Painel e pipeline tecnicamente aprovados. Falta somente uma leitura atual de gasto por identidade autorizada ao orçamento e, caso a entrega exija imagem, a captura manual do dashboard. O passo a passo está em `docs/sprint3.md`.

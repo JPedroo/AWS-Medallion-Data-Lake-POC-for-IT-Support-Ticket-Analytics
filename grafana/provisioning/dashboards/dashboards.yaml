@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: Medallion POC
+    orgId: 1
+    folder: IT Support Tickets
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

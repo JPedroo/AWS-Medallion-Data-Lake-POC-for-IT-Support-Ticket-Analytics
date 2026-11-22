@@ -1,0 +1,65 @@
+{
+  "id": null,
+  "uid": "medallion-it-tickets",
+  "title": "Tickets de suporte | Medallion POC",
+  "description": "Distribuição dos 4.000 tickets da fonte fixa. Sem eixo temporal: o dataset não contém data de negócio.",
+  "tags": ["medallion", "athena", "it-support"],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "type": "barchart",
+      "title": "Tickets por tipo e prioridade",
+      "description": "Contagem da Gold por tipo e prioridade; cada barra empilhada soma o total do tipo.",
+      "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+      "gridPos": {"h": 11, "w": 24, "x": 0, "y": 0},
+      "targets": [{
+        "refId": "A",
+        "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+        "format": 1,
+        "connectionArgs": {"region": "__default", "catalog": "__default", "database": "__default", "workgroup": "__default", "resultReuseEnabled": false, "resultReuseMaxAgeInMinutes": 60},
+        "rawSQL": "SELECT \"type\" AS tipo, sum(CASE WHEN priority = 'low' THEN ticket_count ELSE 0 END) AS baixa, sum(CASE WHEN priority = 'medium' THEN ticket_count ELSE 0 END) AS media, sum(CASE WHEN priority = 'high' THEN ticket_count ELSE 0 END) AS alta FROM medallion_it_tickets_poc.gold_tickets_by_type_priority GROUP BY \"type\" ORDER BY \"type\""
+      }],
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"orientation": "horizontal", "xField": "tipo", "stacking": "normal", "showValue": "auto", "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}}
+    },
+    {
+      "id": 2,
+      "type": "barchart",
+      "title": "Tickets por fila",
+      "description": "Soma da Gold por fila, em ordem decrescente.",
+      "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+      "gridPos": {"h": 13, "w": 14, "x": 0, "y": 11},
+      "targets": [{
+        "refId": "A",
+        "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+        "format": 1,
+        "connectionArgs": {"region": "__default", "catalog": "__default", "database": "__default", "workgroup": "__default", "resultReuseEnabled": false, "resultReuseMaxAgeInMinutes": 60},
+        "rawSQL": "SELECT queue AS fila, sum(ticket_count) AS tickets FROM medallion_it_tickets_poc.gold_tickets_by_queue_language GROUP BY queue ORDER BY tickets DESC"
+      }],
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"orientation": "horizontal", "xField": "fila", "stacking": "none", "showValue": "always", "legend": {"displayMode": "hidden", "placement": "bottom", "showLegend": false}, "tooltip": {"mode": "single", "sort": "none"}}
+    },
+    {
+      "id": 3,
+      "type": "piechart",
+      "title": "Tickets por idioma",
+      "description": "Soma da Gold por idioma.",
+      "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+      "gridPos": {"h": 13, "w": 10, "x": 14, "y": 11},
+      "targets": [{
+        "refId": "A",
+        "datasource": {"type": "grafana-athena-datasource", "uid": "athena-medallion"},
+        "format": 1,
+        "connectionArgs": {"region": "__default", "catalog": "__default", "database": "__default", "workgroup": "__default", "resultReuseEnabled": false, "resultReuseMaxAgeInMinutes": 60},
+        "rawSQL": "SELECT language AS idioma, sum(ticket_count) AS tickets FROM medallion_it_tickets_poc.gold_tickets_by_queue_language GROUP BY language ORDER BY tickets DESC"
+      }],
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"pieType": "pie", "displayLabels": ["name", "percent"], "legend": {"displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"]}, "tooltip": {"mode": "single", "sort": "desc"}, "reduceOptions": {"values": true, "calcs": ["lastNotNull"], "fields": "tickets"}}
+    }
+  ]
+}

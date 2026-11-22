@@ -2,11 +2,11 @@
 
 Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_semanas.pdf`, fornecido pelo usuário, e detalhamento da Sprint 2 informado na conversa.
 
-| Sprint | Período | Entrega | Estado em 2026-11-15 |
+| Sprint | Período | Entrega | Estado em 2026-11-22 |
 | --- | --- | --- | --- |
 | 1 — Preparação e Bronze | Dias 1–5 | Dataset validado, ambiente, orçamento e bucket privados, CSV original e manifesto no S3 | **Concluída**: entrega técnica validada; MFA e retirada da política temporária confirmados pelo usuário no console |
 | 2 — Processamento e consulta | Dias 6–10 | Qualidade, Parquet/Snappy, duas tabelas Gold, DDL/consultas Athena | **Concluída**: Silver/Gold publicadas; banco, tabelas e consultas Athena validados |
-| 3 — Consumo e entrega | Dias 12–15 | Grafana local, evidências, custo observado, relatório e vídeo | Planejada |
+| 3 — Validação e entrega | Dias 11–13 | Grafana local com três visualizações; reexecução, contagens, duração, custo e rastreabilidade | Entrega técnica validada; leitura atual do orçamento pendente por falta de acesso |
 
 ## Sprint 1 — critérios de aceite
 
@@ -38,3 +38,13 @@ Fonte de escopo: briefing local `briefing_projeto_data_lake_medalhao_aws_poc_3_s
 - [x] Publicação S3 e DDL/consultas Athena implementadas e versionadas no repositório.
 - [x] Publicação de Silver/Gold no bucket da POC e verificação dos quatro objetos S3 com SSE-S3; reexecução preservou os IDs de versão.
 - [x] Banco e três tabelas externas no Athena criados; seis consultas de validação executadas e confrontadas com as métricas locais. Os prefixos de cada tabela foram confirmados no Glue.
+
+## Sprint 3 — critérios de aceite
+
+- [x] Grafana local configurado como código com plugin Athena, fonte e painel de três visualizações.
+- [x] Fonte Grafana validada e três visualizações consultadas com dados reais das duas Gold; cada uma soma 4.000 tickets.
+- [x] Script de reexecução e coleta de evidências implementado.
+- [x] Pipeline reexecutado na AWS com Bronze, Silver, Gold, Glue e Athena reconciliados.
+- [x] Duração, IDs, bytes lidos e proveniência registrados em `data/processed/sprint3_evidence.json` e nas evidências do Grafana.
+- [ ] Custo observado no orçamento ou no console Billing registrado com data, escopo e ressalva de atraso.
+- [x] Documentação e relatório final preparados em `docs/sprint3.md` e `docs/relatorio_final.md`.
